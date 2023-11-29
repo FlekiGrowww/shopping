@@ -1,0 +1,48 @@
+// template sheet: https://docs.google.com/spreadsheets/d/1UXorwVof2JjqiNKj1WfW1f00hCGNGuZYFwrw8a_mqN8/copy
+// use your version of the sheet in line 12 below
+// change date range in line 8 and 9 (last 60 days by default)
+// change time zone if necessary to match your Google Ads timezone
+
+function main() {
+  const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;//millisec / day
+  const now = new Date();//current timestamp
+  const from = new Date(now.getTime() - 60 * MILLIS_PER_DAY);//timestamp 60 days ago
+  const to = new Date(now.getTime() - 1 * MILLIS_PER_DAY);//timestamp 1 days ago
+  const timeZone = AdsApp.currentAccount().getTimeZone();//timezone of current account
+  //const timeZone = 'Europe/Budapest';//HU timezone
+
+  let ss = SpreadsheetApp.openByUrl('YOUR SHEET URL HERE');  // enter the URL of YOUR sheet between the  ' '  (copy the template sheet above first)
+  
+  // define commonly used query elements. wrap with spaces for safety
+  let segDate = 	' segments.date ';
+  let title = 		' segments.product_title ';
+  let id =        ' segments.product_item_id ';
+  let name = 		  ' campaign.name ';
+  let impr = 		  ' metrics.impressions ';
+  let clicks = 		' metrics.clicks ';
+  let cost = 		  ' metrics.cost_micros ';
+  let cpc =       ' metrics.average_cpc ';
+  let CTR =       ' metrics.ctr ';
+  let ckShare =   ' metrics.search_click_share ';
+  let imprShare = ' metrics.search_impression_share ';
+  let conv = 	  	' metrics.conversions '; 
+  let value = 		' metrics.conversions_value '; 
+ let date30 = 		' segments.date BETWEEN "' +
+    Utilities.formatDate(from, timeZone, 'yyyy-MM-dd') + '" AND "' +
+    Utilities.formatDate(to, timeZone, 'yyyy-MM-dd') + '"';
+  let order = 		' ORDER BY metrics.cost_micros desc ';
+   
+  let cd = [id, title, impr, clicks, cost, cpc, CTR, conv, value]
+  let campQuery = 'SELECT ' + cd.join(',') + 
+      ' FROM shopping_performance_view ' +
+      ' WHERE ' + date30 + order ; 
+
+      
+  runReport(campQuery, ss.getSheetByName('itemid'));  
+
+}
+
+function runReport(q,sh) {
+  const report = AdsApp.report(q);
+  report.exportToSheet(sh);  
+}
